@@ -5,15 +5,16 @@ function App() {
   const [currencies, setCurrencies] = useState([])
   const [dollar, setDollar] = useState(88)
   const [euro, setEuro] = useState(88)
+  const [have, setHave] = useState('')
+  const [get, setGet] = useState('')
+  const [haveCurrency, setHaveCurrency] = useState(1)
+  const [getCurrency, setGetCurrency] = useState(1)
 
   const getCurrencies = async () => {
     try {
       const url = 'https://www.cbr-xml-daily.ru/daily_json.js'
-      const urlRu = 'https://api.currencyapi.com/v3/latest?apikey=cur_live_az7f8JwalS8QoH7AZvzdxMWp9WSSpzoH29d9wUCL'
       const response = await fetch(url)
       const data = await response.json()
-      const responseRu = await fetch(urlRu)
-      const dataRu = await responseRu.json()
       const arr = []
       const keys = Object.keys(data.Valute)
       for (let i = 0; keys.length > i; i++) {
@@ -21,8 +22,8 @@ function App() {
                   value:data.Valute[keys[i]].Value,
                   name:data.Valute[keys[i]].Name})
       }
-      arr.unshift({code: dataRu.data.RUB.code,
-                  value: dataRu.data.RUB.value,
+      arr.unshift({code: 'RUB',
+                  value: 1,
                   name: 'Российский рубль'})
       setCurrencies(arr)
       setDollar(arr.filter(cur => cur.code === 'USD')[0].value.toFixed(2))
@@ -36,6 +37,10 @@ function App() {
     getCurrencies()
   }, [])
   
+  useEffect(() => {
+    setGet(haveCurrency / getCurrency * have)
+  }, [haveCurrency, getCurrency])
+
   return (
     <div className="App">
       <div className="container">
@@ -44,12 +49,15 @@ function App() {
           <div className="block">
             <h2 className="what left">что у меня есть</h2>
             <form className='form left'>
-              <select className="currencies">
+              <select onChange={event => setHaveCurrency(+event.target.value)} className="currencies">
                 {currencies.map(cur => <option key={cur.code} value={cur.value}>
                                         {cur.code} - {cur.name}
                                       </option>)}
               </select>
-              <input className="value" type="number" />
+              <input onChange={event => {
+                setHave(event.target.value)
+                setGet(haveCurrency / getCurrency * event.target.value)
+              }} value={have} className="value" type="number" />
             </form>
           </div>
           <button className="swap">
@@ -58,12 +66,15 @@ function App() {
           <div className="block">
             <h2 className="what">что я получу</h2>
             <form className='form'>
-              <select className="currencies">
+              <select onChange={event => setGetCurrency(+event.target.value)} className="currencies">
                 {currencies.map(cur => <option key={cur.code} value={cur.value}>
                                           {cur.code} - {cur.name}
                                         </option>)}
               </select>
-              <input className="value" type="number" />
+              <input onChange={event => {
+                setGet(event.target.value)
+                setHave(getCurrency / haveCurrency * event.target.value)
+              }} value={get} className="value" type="number" />
             </form>
           </div>
         </div>
